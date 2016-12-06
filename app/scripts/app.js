@@ -31,7 +31,7 @@ var mockConfig4 = {
   b: 4.5,
   h: 2.5,
   ro1: 20,
-  ro2: 0
+  ro2: 0.000001
 };
 
 var chartCount = 0;
@@ -39,7 +39,7 @@ var chartCount = 0;
 
 var App = function (config) {
 
-  this.config = config || mockConfig;
+  this.config = config || mockConfig1;
 
   //Initialize properties
   this.a = this.config.a; //promień kuli
@@ -68,10 +68,10 @@ App.prototype = function () {
 
     for (var i = 0; i < 67; i++) {
 
-      this.R.set([i, 0], Math.sqrt(Math.pow((1.5 * i - 3 * this.b / 2 - 50), 2) + Math.pow(this.h + this.a, 2))); //RA - d
-      this.R.set([i, 1], Math.sqrt(Math.pow((1.5 * i - this.b / 2 - 50), 2) + Math.pow(this.h + this.a, 2))); //RM
-      this.R.set([i, 2], Math.sqrt(Math.pow((1.5 * i + this.b / 2 - 50), 2) + Math.pow(this.h + this.a, 2))); //RN
-      this.R.set([i, 3], Math.sqrt(Math.pow((1.5 * i + 3 * this.b / 2 - 50), 2) + Math.pow(this.h + this.a, 2))); //RB
+      this.R.set([i, 0], Math.sqrt(Math.pow((((1.5 * i) - (3 * this.b) / 2) - 50), 2) + Math.pow(this.h + this.a, 2))); //RA - d
+      this.R.set([i, 1], Math.sqrt(Math.pow(((1.5 * i) - (this.b / 2) - 50), 2) + Math.pow(this.h + this.a, 2))); //RM
+      this.R.set([i, 2], Math.sqrt(Math.pow((1.5 * i + (this.b / 2) - 50), 2) + Math.pow(this.h + this.a, 2))); //RN
+      this.R.set([i, 3], Math.sqrt(Math.pow((1.5 * i + (3 * this.b / 2) - 50), 2) + Math.pow(this.h + this.a, 2))); //RB
       this.T.set([i, 0], Math.acos((Math.pow(this.b, 2) - Math.pow(this.R.get([i, 0]), 2) - Math.pow(this.R.get([i, 1]), 2)) / (-2 * this.R.get([i, 0]) * this.R.get([i, 1]))));
       this.T.set([i, 1], Math.acos((Math.pow(2 * this.b, 2) - Math.pow(this.R.get([i, 0]), 2) - Math.pow(this.R.get([i, 2]), 2)) / (-2 * this.R.get([i, 0]) * this.R.get([i, 2]))));
       this.T.set([i, 2], Math.acos((Math.pow(2 * this.b, 2) - Math.pow(this.R.get([i, 3]), 2) - Math.pow(this.R.get([i, 1]), 2)) / (-2 * this.R.get([i, 3]) * this.R.get([i, 1]))));
@@ -144,18 +144,18 @@ var drawChart = function (data) {
   chartCount++;
 
   var canvas = document.createElement('canvas');
-  canvas.id = "myChart"+chartCount;
+  canvas.id = "myChart" + chartCount;
   canvas.width = 400;
   canvas.height = 400;
   document.getElementById("charts").appendChild(canvas);
 
-  var ctx = document.getElementById("myChart"+chartCount).getContext("2d");
+  var ctx = document.getElementById("myChart" + chartCount).getContext("2d");
 
-  var myChart = new Chart(ctx, {
+  return new Chart(ctx, {
     type: 'line',
     data: {
       datasets: [{
-        label: 'Chart '+chartCount,
+        label: 'Chart ' + chartCount,
         data: data,
         fill: false
       }]
@@ -168,8 +168,12 @@ var drawChart = function (data) {
         }],
         yAxes: [{
           ticks: {
-            max: 28,
-            min: 8
+            max: Math.max.apply(null, Object.keys(data).map(function (key) {
+              return data[key].y;
+            })) + 1,
+            min: Math.min.apply(null, Object.keys(data).map(function (key) {
+              return data[key].y;
+            })) - 1
           }
         }]
       }
@@ -178,13 +182,22 @@ var drawChart = function (data) {
 
 };
 
-var application1 = new App(mockConfig1);
-var application2 = new App(mockConfig2);
-var application3 = new App(mockConfig3);
-var application4 = new App(mockConfig4);
+var calculate = function () {
 
+  var config = {},
+    radius = parseInt(document.getElementById("radius").value),
+    distance = parseInt(document.getElementById("distance").value),
+    depth = parseInt(document.getElementById("depth").value),
+    environResist = parseInt(document.getElementById("environResist").value),
+    ballResist = parseInt(document.getElementById("ballResist").value),
+    app;
 
-drawChart(application1.presentData());
-drawChart(application2.presentData());
-drawChart(application3.presentData());
-drawChart(application4.presentData());
+  config.a = radius;
+  config.b = distance;
+  config.h = depth;
+  config.ro1 = environResist;
+  config.ro2 = ballResist;
+
+  app = new App(config);
+  drawChart(app.presentData());
+};
